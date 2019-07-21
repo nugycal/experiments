@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor</title>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0px;
+        }
+        html, body {
+            background-color: #2f3640;
+        }
+        .sidebar {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            background-color: #f5f6fa;
+            height: 100%;
+        }
+        .sidebar li:hover {
+            cursor: pointer;
+            background-color:#a4b0be;
+        }
+        .sidebar li img {
+            width: 32px;
+            height: 32px;
+            padding: 4px;
+        }
+        .sidebar li img:hover {
+            cursor: pointer;
+        }
+        .sidebar .bin {
+            position: absolute;
+            bottom: 4px;
+        }
+        .info {
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            height: 100%;
+            background-color: #f5f6fa;
+            min-width: 350px;
+        }
+        .info li {
+            padding: 10px;
+            list-style: none;
+        }
+        .info li span {
+            color: #0984e3;
+        }
+        .info .bin {
+            width: 32px;
+            height: 32px;
+            padding: 4px;
+            margin: 10px;
+            text-align: center;
+        }
+        @media only screen and (max-width: 1000px) {
+            .info {
+                display: none;
+            }
+
+            .info * {
+                display: none;
+            }
+        }
+    </style>
+    <script>
+        let c = document.createElement('canvas');
+        c.id = "canvas";
+        document.documentElement.appendChild(c);
+        c = document.getElementById('canvas');
+        let initial_x = 0;
+        let initial_y = 0;
+        let off_x = 0;
+        let off_y = 0;
+        let moving = -1;
+        let elements = Array();
+
+        let colorMap = {"aliceblue":"#f0f8ff","antiquewhite":"#faebd7","aqua":"#00ffff","aquamarine":"#7fffd4","azure":"#f0ffff",
+            "beige":"#f5f5dc","bisque":"#ffe4c4","black":"#000000","blanchedalmond":"#ffebcd","blue":"#0000ff","blueviolet":"#8a2be2","brown":"#a52a2a","burlywood":"#deb887",
+            "cadetblue":"#5f9ea0","chartreuse":"#7fff00","chocolate":"#d2691e","coral":"#ff7f50","cornflowerblue":"#6495ed","cornsilk":"#fff8dc","crimson":"#dc143c","cyan":"#00ffff",
+            "darkblue":"#00008b","darkcyan":"#008b8b","darkgoldenrod":"#b8860b","darkgray":"#a9a9a9","darkgreen":"#006400","darkkhaki":"#bdb76b","darkmagenta":"#8b008b","darkolivegreen":"#556b2f",
+            "darkorange":"#ff8c00","darkorchid":"#9932cc","darkred":"#8b0000","darksalmon":"#e9967a","darkseagreen":"#8fbc8f","darkslateblue":"#483d8b","darkslategray":"#2f4f4f","darkturquoise":"#00ced1",
+            "darkviolet":"#9400d3","deeppink":"#ff1493","deepskyblue":"#00bfff","dimgray":"#696969","dodgerblue":"#1e90ff",
+            "firebrick":"#b22222","floralwhite":"#fffaf0","forestgreen":"#228b22","fuchsia":"#ff00ff",
+            "gainsboro":"#dcdcdc","ghostwhite":"#f8f8ff","gold":"#ffd700","goldenrod":"#daa520","gray":"#808080","green":"#008000","greenyellow":"#adff2f",
+            "honeydew":"#f0fff0","hotpink":"#ff69b4",
+            "indianred ":"#cd5c5c","indigo":"#4b0082","ivory":"#fffff0","khaki":"#f0e68c",
+            "lavender":"#e6e6fa","lavenderblush":"#fff0f5","lawngreen":"#7cfc00","lemonchiffon":"#fffacd","lightblue":"#add8e6","lightcoral":"#f08080","lightcyan":"#e0ffff","lightgoldenrodyellow":"#fafad2",
+            "lightgrey":"#d3d3d3","lightgreen":"#90ee90","lightpink":"#ffb6c1","lightsalmon":"#ffa07a","lightseagreen":"#20b2aa","lightskyblue":"#87cefa","lightslategray":"#778899","lightsteelblue":"#b0c4de",
+            "lightyellow":"#ffffe0","lime":"#00ff00","limegreen":"#32cd32","linen":"#faf0e6",
+            "magenta":"#ff00ff","maroon":"#800000","mediumaquamarine":"#66cdaa","mediumblue":"#0000cd","mediumorchid":"#ba55d3","mediumpurple":"#9370d8","mediumseagreen":"#3cb371","mediumslateblue":"#7b68ee",
+            "mediumspringgreen":"#00fa9a","mediumturquoise":"#48d1cc","mediumvioletred":"#c71585","midnightblue":"#191970","mintcream":"#f5fffa","mistyrose":"#ffe4e1","moccasin":"#ffe4b5",
+            "navajowhite":"#ffdead","navy":"#000080",
+            "oldlace":"#fdf5e6","olive":"#808000","olivedrab":"#6b8e23","orange":"#ffa500","orangered":"#ff4500","orchid":"#da70d6",
+            "palegoldenrod":"#eee8aa","palegreen":"#98fb98","paleturquoise":"#afeeee","palevioletred":"#d87093","papayawhip":"#ffefd5","peachpuff":"#ffdab9","peru":"#cd853f","pink":"#ffc0cb","plum":"#dda0dd","powderblue":"#b0e0e6","purple":"#800080",
+            "rebeccapurple":"#663399","red":"#ff0000","rosybrown":"#bc8f8f","royalblue":"#4169e1",
+            "saddlebrown":"#8b4513","salmon":"#fa8072","sandybrown":"#f4a460","seagreen":"#2e8b57","seashell":"#fff5ee","sienna":"#a0522d","silver":"#c0c0c0","skyblue":"#87ceeb","slateblue":"#6a5acd","slategray":"#708090","snow":"#fffafa","springgreen":"#00ff7f","steelblue":"#4682b4",
+            "tan":"#d2b48c","teal":"#008080","thistle":"#d8bfd8","tomato":"#ff6347","turquoise":"#40e0d0",
+            "violet":"#ee82ee",
+            "wheat":"#f5deb3","white":"#ffffff","whitesmoke":"#f5f5f5",
+            "yellow":"#ffff00","yellowgreen":"#9acd32"};
+
+        function load() {
+            resizeCanvas();
+            setInterval(draw, 60);
+            c.addEventListener('click', select, false);
+            document.addEventListener('keydown', keyHandler);
+
+            c.addEventListener('mousedown', function(event) {
+                initial_x = event.clientX;
+                initial_y = event.clientY;
+                showInfo();
+                for (let el of elements) {
+                    if (el['x'] <= initial_x && el['x'] + el['w'] * el['scale'] >= initial_x && el['y'] <= initial_y && el['y'] + el['h'] * el['scale'] >= initial_y) {
+                        moving = elements.indexOf(el);
+                    }
+                }
+                if (moving === -1) return;
+                elements[moving]['selected'] = true;
+                showInfo(elements[moving]);
+                c.addEventListener('mousemove', function(event) {
+                    resizeOrMove(event, initial_x, initial_y);
+                }, false);
+            }, false);
+            c.addEventListener('mouseup', function() {
+                initial_x = -100;
+                initial_y = -100;
+                off_x = 0;
+                off_y = 0;
+                if (moving === -1) {
+                    showInfo();
+                    return;
+                }
+                for (el of elements) {
+                    el['selected'] = false;
+                }
+                elements[moving]['selected'] = true;
+                showInfo(elements[moving]);
+                moving = -1;
+            }, false);
+        };
+
+        // Deprecated
+        function move(event, i_x, i_y) {
+            if (i_x < 0 || i_y < 0) return;
+            let x = event.clientX;
+            let y = event.clientY;
+            for (let el of elements) {
+                if (el['x'] <= x && el['x'] + el['w'] >= x && el['y'] <= y && el['y'] + el['h'] >= y) {
+                    for (e of elements) {
+                        e['selected'] = false;
+                    }
+                    el['selected'] = true;
+                    el['x'] = el['x'] - off_x - i_x + x;
+                    el['y'] = el['y'] - off_y - i_y + y;
+                    off_x = x - i_x;
+                    off_y = y - i_y;
+                }
+            }
+        }
+
+        function keyHandler(event) {
+            switch (event.key) {
+                case "Delete":
+                case "Backspace":
+                    for (let el of elements) {
+                        if (el['selected']) {
+                            elements.splice(elements.indexOf(el), 1);
+                        }
+                    }
+                    break;
+                default:
+                    console.log("pressed ", event.key);
+            }
+        }
+
+        function resizeOrMove(event, i_x, i_y) {
+            if (i_x < 0 || i_y < 0) return;
+            let x = event.clientX;
+            let y = event.clientY;
+            for (let el of elements) {
+                if (moving === elements.indexOf(el) && /*el['type'] === 'img' && */((el['x'] - 7 <= x && el['x'] + 7 >= x &&
+                    el['y'] - 7 <= y && el['y'] + 7 >= y) ||
+                    (el['x'] + el['w'] * el['scale'] - 7 <= x && el['x'] + el['w'] * el['scale'] + 7 >= x &&
+                        el['y'] - 7 <= y && el['y'] + 7 >= y) ||
+                    (el['x'] - 7 <= x && el['x'] + 7 >= x &&
+                        el['y'] + el['h'] * el['scale'] - 7 <= y && el['y'] + el['h'] * el['scale'] + 7 >= y) ||
+                    (el['x'] + el['w'] * el['scale'] - 7 <= x && el['x'] + el['w'] * el['scale'] + 7 >= x &&
+                        el['y'] + el['h'] * el['scale'] - 7 <= y && el['y'] + el['h'] * el['scale'] + 7 >= y)) && el['selected']) {
+
+                    //TODO: Make width changes only apply to images this way - text needs to use ctx.measureText
+
+                    if (el['x'] - 7 <= x && el['x'] + 7 >= x && i_x > x) {
+                        el['w'] = el['w'] - x + el['x'];
+                        el['x'] += x - el['x'];
+                    }
+                    if (el['x'] - 7 <= x && el['x'] + 7 >= x && i_x < x) {
+                        el['w'] = el['w'] - x + el['x'];
+                        el['x'] += x - el['x'];
+                    }
+                    if (el['x'] + el['w'] * el['scale'] - 7 <= x && el['x'] + el['w'] * el['scale'] + 7 >= x && i_x > x) {
+                        el['w'] = x - el['x'];
+                    }
+                    if (el['x'] + el['w'] * el['scale'] - 7 <= x && el['x'] + el['w'] * el['scale'] + 7 >= x && i_x < x) {
+                        el['w'] = x - el['x'];
+                    }
+
+                    if (el['y'] - 7 <= y && el['y'] + 7 >= y && i_y > y) {
+                        el['h'] = el['h'] - y + el['y'];
+                        el['y'] += y - el['y'];
+                    }
+                    if (el['y'] - 7 <= y && el['y'] + 7 >= y && i_y < y) {
+                        el['h'] = el['h'] - x + el['y'];
+                        el['y'] += y - el['y'];
+                    }
+                    if (el['y'] + el['h'] * el['scale'] - 7 <= y && el['y'] + el['h'] * el['scale'] + 7 >= y && i_y > y) {
+                        el['h'] = y - el['y'];
+                    }
+                    if (el['y'] + el['h'] * el['scale'] - 7 <= y && el['y'] + el['h'] * el['scale'] + 7 >= y && i_y < y) {
+                        el['h'] = y - el['y'];
+                    }
+                    off_x = el['x'] - i_x;
+                    off_y = el['y'] - i_y;
+                    break;
+                }
+                if (el['x'] <= x && el['x'] + el['w'] * el['scale'] >= x && el['y'] <= y && el['y'] + el['h'] * el['scale'] >= y && elements.indexOf(el) === moving) {
+                    el['x'] = el['x'] - off_x - i_x + x;
+                    el['y'] = el['y'] - off_y - i_y + y;
+                    off_x = x - i_x;
+                    off_y = y - i_y;
+                    break;
+                }
+            }
+        }
+
+        function draw() {
+            resizeCanvas();
+            ctx.fillStyle = "#2f3640";
+            ctx.fillRect(0, 0, c.width, c.height);
+
+            for (let el of elements) {
+                if (el["type"] === "img") {
+                    ctx.drawImage(el["data"], el['x'], el['y'], el['w'] * el['scale'], el['h'] * el['scale']);
+                }
+                if (el["type"] === "txt") {
+                    ctx.fillStyle = el['color'];
+                    ctx.font = el['h'] + "px " + el['font'];
+                    ctx.fillText(el['data'], el['x'], el['y'] + el['h'] / 3 * 2);
+                }
+                if (el["type"] === "box") {
+                    ctx.fillStyle = el['color'];
+                    ctx.fillRect(el['x'], el['y'], el['w'] * el['scale'], el['h'] * el['scale']);
+                }
+
+                if (el["selected"] && el['type'] !== 'txt') {
+                    ctx.beginPath();
+                    ctx.arc(el['x'], el['y'], 5, 2 * Math.PI, false);
+                    ctx.fillStyle = "#bdc3c7";
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#f5f6fa";
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(el['x'] + el['w'] * el['scale'], el['y'], 5, 2 * Math.PI, false);
+                    ctx.fillStyle = "#bdc3c7";
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#f5f6fa";
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(el['x'], el['y'] + el['h'] * el['scale'], 5, 2 * Math.PI, false);
+                    ctx.fillStyle = "#bdc3c7";
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#f5f6fa";
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(el['x'] + el['w'] * el['scale'], el['y'] + el['h'] * el['scale'], 5, 2 * Math.PI, false);
+                    ctx.fillStyle = "#bdc3c7";
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#f5f6fa";
+                    ctx.stroke();
+                }
+                else if (el["selected"] && el['type'] === 'txt') {
+                    ctx.beginPath();
+                    ctx.arc(el['x'], el['y'], 5, 2 * Math.PI, false);
+                    ctx.fillStyle = "#bdc3c7";
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#f5f6fa";
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(el['x'] + el['w'], el['y'], 5, 2 * Math.PI, false);
+                    ctx.fillStyle = "#bdc3c7";
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#f5f6fa";
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(el['x'], el['y'] + el['h'], 5, 2 * Math.PI, false);
+                    ctx.fillStyle = "#bdc3c7";
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#f5f6fa";
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(el['x'] + el['w'], el['y'] + el['h'], 5, 2 * Math.PI, false);
+                    ctx.fillStyle = "#bdc3c7";
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#f5f6fa";
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function select(event) {
+            let x = event.clientX;
+            let y = event.clientY;
+            for (el of elements) {
+                if (el['x'] <= x && el['x'] + el['w'] >= x && el['y'] <= y && el['y'] + el['h'] >= y) {
+                    if (el['selected'] === true && off_x != 0) {
+                        el['selected'] = false;
+                    }
+                    else {
+                        el['selected'] = true;
+                    }
+                }
+                else {
+                    el['selected'] = false;
+                }
+            }
+        }
+
+        let ctx = c.getContext('2d');
+
+        function addImage() {
+            let img = new Image();
+            img.onload = function() {
+                let w = img.width;
+                let h = img.height;
+
+                elements.push({
+                    'id': elements.length,
+                    'type': 'img',
+                    'x': 100,
+                    'y': 100,
+                    'w': 200,
+                    'h': h * (200/w),
+                    'scale': 1,
+                    'data': img,
+                    'selected': false
+                });
+            };
+            img.src = "https://www.canva.com/photo-editor/images/front.jpg";
+        }
+
+        function addBox() {
+            let w = 100;
+            let h = 100;
+
+            elements.push({
+                'id': elements.length,
+                'type': 'box',
+                'x': 100,
+                'y': 100,
+                'w': 200,
+                'h': h * (200/w),
+                'scale': 1,
+                'color': 'red',
+                'selected': false
+            });
+        }
+
+        function addText() {
+            let txt = prompt("Enter text");
+            ctx.font = "32px Arial";
+            ctx.fillStyle = "#FFF";
+            let w = ctx.measureText(txt).width;
+
+            elements.push({
+                'id': elements.length,
+                'type': 'txt',
+                'x': 50,
+                'y': 50,
+                'w': w,
+                'h': 32,
+                'scale': 1,
+                'color': 'white',
+                'font': 'Arial',
+                'data': txt,
+                'selected': false
+            });
+        }
+
+        function del() {
+            while (elements.length !== 0) elements.splice(0, 1);
+            showInfo();
+        }
+
+        function showInfo(el) {
+            let container = document.getElementsByClassName('info')[0];
+            while (container.childNodes.length != 0) {
+                container.childNodes[0].parentNode.removeChild(container.childNodes[0]);
+            }
+            if (el == undefined) {
+                return;
+            }
+            let index = elements.indexOf(el);
+            Object.keys(el).forEach(function(key) {
+                let v = document.createElement('li');
+                if (el['type'] === 'txt' && key === 'scale') return;
+                if (el['type'] === 'img' && key === 'data') {
+                    v.innerHTML = key + ': <input type="file" name="upload">';
+                    let picker = v.getElementsByTagName('input')[0];
+                    picker.setAttribute('data-index', elements.indexOf(el));
+                    picker.onchange = function(event) {
+                        let index = this.getAttribute('data-index');
+                        let img = new Image();
+                        img.onload = function() {
+                            let scale_w = elements[index]['w']/elements[index]['data'].width;
+                            elements[index]['data'] = img;
+                            elements[index]['w'] = img.width*scale_w;
+                            elements[index]['h'] = img.height*scale_w;
+                        };
+                        img.src = URL.createObjectURL(event.target.files[0]);
+                        reformat(index);
+                        showInfo(elements[index]);
+                    }
+                }
+                else if (key !== 'color') {
+                    v.innerHTML = key + ": <span class='val'>" + el[key];
+                    v.setAttribute('data-index', elements.indexOf(el));
+                    v.setAttribute('data-key', key);
+                    if (key !== 'type' && key !== 'id' && key !== 'selected') {
+                        v.onclick = function () {
+                            let k = this.getAttribute('data-key');
+                            let i = this.getAttribute('data-index');
+                            let val = prompt("Enter new value for " + k);
+                            if (val == undefined || val == null) return;
+                            if (!isNaN(elements[i][k])) {
+                                elements[i][k] = Number(val);
+                            } else {
+                                elements[i][k] = val;
+                            }
+                            reformat(i);
+                            showInfo(elements[i]);
+                        };
+                    }
+                }
+                else {
+                /*
+                <input type="color" id="head" name="head"
+                    value="#e66465">
+                        <label for="head">Head</label>
+                 */
+                    v.innerHTML = key + ': <input type="color" name="color" value="' + (colorMap[el['color']] || el['color']) + '"> <label for="color">' + el['color'] + '</label>';
+                    let picker = v.getElementsByTagName('input')[0];
+                    picker.setAttribute('data-index', elements.indexOf(el));
+                    picker.onchange = function(event) {
+                        let index = this.getAttribute('data-index');
+                        elements[index]['color'] = event.target.value;
+                        reformat(index);
+                        showInfo(elements[index]);
+                    }
+                }
+                container.appendChild(v);
+            });
+            let bin = document.createElement('button');
+            bin.classList.add('bin');
+            bin.innerHTML = '<img src="https://image.flaticon.com/icons/svg/126/126468.svg">';
+            bin.onclick = function() {
+                elements.splice(index, 1);
+                showInfo();
+            };
+            container.appendChild(bin);
+
+            // data.sort(function(x,y){ return x == first ? -1 : y == first ? 1 : 0; });
+
+
+            let front = document.createElement('button');
+            front.classList.add('bin');
+            front.innerHTML = '<img src="https://image.flaticon.com/icons/svg/125/125840.svg">';
+            front.setAttribute('data-index', index);
+            front.onclick = function() {
+                let index = this.getAttribute('data-index');
+                elements.sort(function(x,y){ return x == elements[index] ? -1 : y == elements[index] ? 1 : 0; });
+                showInfo(elements[index]);
+            };
+            container.appendChild(front);
+        }
+
+        function reformat(i) {
+            let el = elements[i];
+            if (el['h'] < 0) el['h'] *= -1;
+            if (el['w'] < 0) el['w'] *= -1;
+            if (el['x'] < 0) el['x'] *= -1;
+            if (el['y'] < 0) el['y'] *= -1;
+            if (el['type'] !== 'txt') return;
+            let ctx = c.getContext('2d');
+            ctx.font = el['h'] + "px " + el['font'];
+            el['w'] = ctx.measureText(el['data']).width;
+        }
+
+        function resizeCanvas() {
+            c.width = window.innerWidth;
+            c.height = window.innerHeight - 4;
+        }
+    </script>
+</head>
+<body onload="load()">
+    <ul class="sidebar">
+        <li onclick="addImage()"><img src="https://image.flaticon.com/icons/svg/159/159716.svg"></li>
+        <li onclick="addBox()"><img src="https://image.flaticon.com/icons/svg/61/61221.svg"></li>
+        <li onclick="addText()"><img src="https://image.flaticon.com/icons/svg/25/25645.svg"></li>
+        <li onclick="del()" class="bin"><img src="https://image.flaticon.com/icons/svg/126/126468.svg"></li>
+    </ul>
+    <ul class="info"></ul>
+</body>
+</html>

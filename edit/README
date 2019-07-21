@@ -1,0 +1,11 @@
+# Edit
+
+Make in a 8 hour sprint (9pm to 5am), I made this because at the time I had a guest lecturer from Canva. With the intent of demonstrating the hackability of the HTML canvas to friends, I designed this system to incorporate similar editing properties to that of the actual Canva system (albeit very poorly implemented and highly buggy (more due to the HTML5 JS integration lacking support for my Macbook's touchpad)).
+
+Current features:
+* Add images, rectangles and text
+* Resize by dragging corners or by inputting desired size
+* Information sidebar displays information about selected element (which can be edited using prompts)
+* Clear canvas using single button in bottom left corner of screen
+
+## Note: Doesn't work well on laptops, and the hitboxes for the dragging are somewhat poorly implemented (they only work reliably when dragged from the innermost corner)
