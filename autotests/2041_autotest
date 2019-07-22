@@ -1,0 +1,73 @@
+#!/bin/sh
+
+# Create a working directory
+temp="$(mktemp -d)"
+cwd="$(pwd)"
+
+cd "$temp"
+
+if test $# != 1 && test $# != 2; then
+    exit 1;
+elif test $# == 2 && ! test -e "$cwd/$2"; then
+    exit 1;
+fi
+
+# Grab the test file from the course website
+echo "Fetching tests..."
+wget -q "https://cgi.cse.unsw.edu.au/~cs2041/19T2//activities/$1/tests.txt" 2>/dev/null
+
+# If unable to get the exercise
+if test $? != 0 || egrep -q 'Page Not Found' tests.txt; then
+    echo "Invalid exercise" 1>&2
+    exit 1;
+fi
+
+#cat tests.txt
+max_cpu="$(egrep '^max_cpu=' tests.txt | cut -d'=' -f2)"
+
+max_wall_clock="$(egrep '^max_wall_clock=' tests.txt | cut -d'=' -f2)"
+# timeout -k $max_wall_clock $max_wall_clock $command
+# timeout: sending signal TERM
+
+# Grab our program to run
+program="$(egrep '^program=' tests.txt | cut -d'=' -f2)"
+
+if test $# -eq 2 && test -e "$cwd/$program"; then
+    cp "$cwd/$2" $program
+fi
+chmod 755 $program
+
+# Add program to path
+export PATH=".:$PATH"
+
+# Run each test
+cat tests.txt | while read line; do
+    if echo "$line" | egrep -q '^[0-9]+'; then
+        num="$(echo $line | egrep -o '^[0-9]+')"
+        mkdir $num
+        cp "$program" "$num/"
+        cd $num
+        cmd="$(echo $line | egrep -o 'command=(.*?)expected_stdout=' | sed 's/^command=//;s/expected_stdout=$//')"
+        exp="$(echo $line | egrep -o 'expected_stdout=(.*?)$' | sed 's/^expected_stdout=//')"
+
+        echo "$exp" > stdout.exp
+
+        $cmd > stdout
+
+        # Compare the outputs
+        if cmp -s stdout stdout.exp; then
+            echo "Test $num - Passed!"
+        else
+            echo "Test $num - Failed:"
+            diff stdout stdout.exp | sed 's/^>/+/g;s/^</-/g'
+            echo
+        fi
+
+        # Tidy up
+        cd ".."
+        rm -rf "$num"
+    fi
+done
+
+cd "$cwd"
+rm -rf "$temp"
