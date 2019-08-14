@@ -48,7 +48,10 @@ for submission in top_subreddit:
     for c in submission.comments.list()[0:randint(7,30)]:
         if c in submission.comments.replace_more(limit=0):
             continue
-        comments.append({"author":str(c.author),"comment":str(c.body),"published":str(c.created_utc)})
+        try:
+            comments.append({"author":str(c.author),"comment":str(c.body),"published":str(c.created_utc)})
+        except AttributeError:
+            continue
 
     topics_dict["title"].append(submission.title)
     topics_dict["score"].append(submission.score)
