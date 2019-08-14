@@ -4,6 +4,8 @@ import getpass
 import praw
 import pandas as pd
 import sys
+from random import randint
+import json
 
 def get_date(created):
     return dt.datetime.fromtimestamp(created)
@@ -29,25 +31,34 @@ reddit = praw.Reddit(client_id='wvLDWUYCHFPO2A', \
 print("Fetching posts...")
 
 subreddit = reddit.subreddit(target)
-top_subreddit = subreddit.top(limit=500)
+top_subreddit = subreddit.top(limit=50)
 
 print("Parsing...")
 
 topics_dict = { "title":[], \
                 "score":[], \
+                "author":[], \
                 "id":[], "url":[], \
                 "comms_num": [], \
                 "created": [], \
-                "body":[]}
+               "body":[], "comments":[]}
 
 for submission in top_subreddit:
+    comments = []
+    for c in submission.comments.list()[0:randint(7,30)]:
+        if c in submission.comments.replace_more(limit=0):
+            continue
+        comments.append({"author":str(c.author),"comment":str(c.body),"published":str(c.created_utc)})
+
     topics_dict["title"].append(submission.title)
     topics_dict["score"].append(submission.score)
     topics_dict["id"].append(submission.id)
+    topics_dict["author"].append(str(submission.author))
     topics_dict["url"].append(submission.url)
     topics_dict["comms_num"].append(submission.num_comments)
     topics_dict["created"].append(submission.created)
     topics_dict["body"].append(submission.selftext)
+    topics_dict["comments"].append(json.dumps(comments))
 
 topics_data = pd.DataFrame(topics_dict)
 _timestamp = topics_data["created"].apply(get_date)

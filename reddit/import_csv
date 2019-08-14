@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+import requests
+import base64
+import sys
+import json
+import csv
+import random
+
+def get_image(url):
+    data = requests.get(url)
+    data = data.content
+    return base64.b64encode(data)
+
+def en_s(s):
+    return base64.b64encode(s.encode('utf-8'))
+
+FILE = sys.argv[1]
+API_URL = sys.argv[2]
+
+def get_auth(url, author):
+    token = ""
+    auth = requests.post(url + "/auth/login", json={"username": author, "password": en_s("password")})
+    if (auth.status_code == 200):
+        token = json.loads(auth.content)['token']
+    else:
+        auth = requests.post(url + "/auth/signup", json={"username": author, "password": en_s("password"), "email": author + "@gmail.com", "name": author})
+        if (auth.status_code == 200):
+            token = json.loads(auth.content)['token']
+    return token
+
+with open(FILE, "r") as f:
+    reader = csv.DictReader(f)
+    subseddit = FILE[:-4]
+    for row in reader:
+        image = ""
+        if row['url'].endswith("jpg") or row['url'].endswith("png") or row['url'].endswith("gif"):
+            image = get_image(row['url'])
+        token = get_auth(API_URL, row['author'])
+
+        text = row['body']
+        title = row['title']
+        if text == '':
+            text = row['title']
+            title = title[0:15]
+        body = {"title":title, "text": text, "subseddit": subseddit, "image": image}
+        post = requests.post(API_URL + "/post/", headers={"Authorization": "Token " + token, "Content-Type": "application/json"}, json=body)
+        post_id = json.loads(post.content)['post_id']
+
+        comments = json.loads(row['comments'])
+        for comment in comments:
+            token = get_auth(API_URL, comment['author'])
+            body = {"comment":comment['comment']}
+            requests.put(API_URL + "/post/comment?id=" + str(post_id), headers={"Authorization": "Token " + token, "Content-Type": "application/json"}, json=body)
+
+            if random.randint(0, 5) % 2 == 1:
+                requests.put(API_URL + "/post/vote?id=" + str(post_id), headers={"Authorization": "Token " + token, "Content-Type": "application/json"})
