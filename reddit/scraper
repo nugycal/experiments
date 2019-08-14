@@ -10,11 +10,11 @@ import json
 def get_date(created):
     return dt.datetime.fromtimestamp(created)
 
-if (len(sys.argv) != 2 and len(sys.argv) != 3):
+if (len(sys.argv) != 3):
     print(f"Usage: {sys.argv[0]} <subreddit> <user>")
     exit(1)
 
-username = "nugycal"
+username = sys.argv[2]
 if (len(sys.argv) == 3):
     username = sys.argv[2]
 
