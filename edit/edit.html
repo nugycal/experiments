@@ -209,17 +209,21 @@
                     }
 
                     if (el['y'] - 7 <= y && el['y'] + 7 >= y && i_y > y) {
+                        console.log("a");
                         el['h'] = el['h'] - y + el['y'];
                         el['y'] += y - el['y'];
                     }
                     if (el['y'] - 7 <= y && el['y'] + 7 >= y && i_y < y) {
-                        el['h'] = el['h'] - x + el['y'];
+                        console.log("b");
+                        el['h'] = el['h'] - y + el['y'];
                         el['y'] += y - el['y'];
                     }
                     if (el['y'] + el['h'] * el['scale'] - 7 <= y && el['y'] + el['h'] * el['scale'] + 7 >= y && i_y > y) {
+                        console.log("c");
                         el['h'] = y - el['y'];
                     }
                     if (el['y'] + el['h'] * el['scale'] - 7 <= y && el['y'] + el['h'] * el['scale'] + 7 >= y && i_y < y) {
+                        console.log("d");
                         el['h'] = y - el['y'];
                     }
                     off_x = el['x'] - i_x;
@@ -362,7 +366,7 @@
                     'selected': false
                 });
             };
-            img.src = "https://www.canva.com/photo-editor/images/front.jpg";
+            img.src = "https://preview.redd.it/g5g7mtzvmht01.jpg?width=1024&auto=webp&s=f565203ccc8928002c16af220b92ef0c475bdc22";
         }
 
         function addBox() {

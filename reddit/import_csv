@@ -16,6 +16,8 @@ def en_s(s):
 
 FILE = sys.argv[1]
 API_URL = sys.argv[2]
+if len(sys.argv) >= 4:
+    LIMIT = sys.argv[3]
 
 def get_auth(url, author):
     token = ""
@@ -31,7 +33,9 @@ def get_auth(url, author):
 with open(FILE, "r") as f:
     reader = csv.DictReader(f)
     subseddit = FILE[:-4]
-    for row in reader:
+    if len(sys.argv) < 4:
+        LIMIT = len(reader)
+    for row in reader and i in range(LIMIT):
         image = ""
         if row['url'].endswith("jpg") or row['url'].endswith("png") or row['url'].endswith("gif"):
             image = get_image(row['url'])
