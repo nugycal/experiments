@@ -1,0 +1,16 @@
+#!/bin/bash
+state=`osascript -e 'tell application "iTunes" to player state as string'`;
+if [[ $state = "paused" ]]; then
+    echo "🎵 iTunes is currently $state.";
+fi
+if [ $state = "playing" ]; then
+    artist=`osascript -e 'tell application "iTunes" to artist of current track as string'`;
+    track=`osascript -e 'tell application "iTunes" to name of current track as string'`;
+    duration=`osascript -e 'tell application "iTunes" to duration of current track as integer'`;
+    album=`osascript -e 'tell application "iTunes" to album of current track as string'`;
+    current=`osascript -e 'tell application "iTunes" to player position as integer'`;
+    echo "🎵 $artist - $track";
+fi
+if [[ $state = "stopped" ]]; then
+        echo "🎵 iTunes is not currently running."
+fi
