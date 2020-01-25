@@ -1,6 +1,6 @@
 # 2041_autotest
 
-# This project was written for fun as a challenge to myself. It is in no way entirely function, and I am unable to guarantee that it will work 100% of the time.
+## This project was written for fun as a challenge to myself. It is in no way entirely functional, and I am unable to guarantee that it will work 100% of the time. Not recommended for use.
 
 ## Description
 
